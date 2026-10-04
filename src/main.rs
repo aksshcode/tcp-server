@@ -7,6 +7,7 @@ use std::io::Read;
 use std::io::Write;
 use std::net::TcpListener;
 use std::net::TcpStream;
+use std::process::Command;
 
 fn main() {
     let tcp_listener = TcpListener::bind("0.0.0.0:6767").expect("Failed to bind.");
@@ -52,8 +53,15 @@ fn handle_path_based_response(mut stream: TcpStream, path: String) {
         stream
             .write_all(res.as_bytes())
             .expect("Failed send response.");
+    } else if path == "/hello-akash" {
+        send_msg("Hello akash!");
+        let res = generate_http_response("404 Not Found", "pinged akash");
+        stream
+            .write_all(res.as_bytes())
+            .expect("Failed send response.");
     } else {
-        let res = generate_http_response("404 Not Found", "valid end points:\n 1./greet \n 2./ping");
+        let res =
+            generate_http_response("404 Not Found", "valid end points:\n 1./greet \n 2./ping");
         stream
             .write_all(res.as_bytes())
             .expect("Failed send response.");
@@ -67,4 +75,11 @@ fn generate_http_response(status_line: &str, body: &str) -> String {
         "HTTP/1.1 {status_line}\r\ncontent-type: text/plain\r\ncontent-length: {body_length}\r\n\r\n{body}"
     );
     res
+}
+
+fn send_msg(msg: &str) {
+    Command::new("notify-send")
+        .args([msg])
+        .output()
+        .expect("failed to run command and get output");
 }
